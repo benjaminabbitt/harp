@@ -1,0 +1,13 @@
+[package]
+name = "harp-ffi"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+harp-core.workspace = true
+
+[build-dependencies]
+cbindgen = "0.28"

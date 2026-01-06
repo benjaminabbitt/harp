@@ -1,0 +1,54 @@
+services:
+  # Build Rust library and CLI
+  rust:
+    build:
+      context: .
+      dockerfile: docker/rust.Dockerfile
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+    working_dir: /workspace
+
+  # Build Python wheels
+  python:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+    working_dir: /workspace
+
+  # Build and test Go bindings
+  go:
+    build:
+      context: .
+      dockerfile: docker/go.Dockerfile
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+    working_dir: /workspace
+
+  # Build and test WASM bindings
+  wasm:
+    build:
+      context: .
+      dockerfile: docker/wasm.Dockerfile
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+    working_dir: /workspace
+
+  # Build CLI binary (multi-stage, no volume needed)
+  cli:
+    build:
+      context: .
+      dockerfile: docker/cli.Dockerfile
+
+volumes:
+  cargo-cache:
+  cargo-git:

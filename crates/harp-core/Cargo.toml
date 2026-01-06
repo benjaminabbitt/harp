@@ -1,0 +1,19 @@
+[package]
+name = "harp-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Core library for generating random names from adjectives and nouns"
+keywords = ["random", "name", "generator"]
+categories = ["text-processing"]
+readme = "README.md"
+include = ["src/**/*", "data/**/*", "Cargo.toml", "README.md"]
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rand.workspace = true
+flate2.workspace = true

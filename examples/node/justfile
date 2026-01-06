@@ -1,0 +1,19 @@
+TOP := `git rev-parse --show-toplevel`
+IMAGE := "harp-node"
+
+# Build the container image
+build-image:
+    docker build -t {{IMAGE}} -f {{TOP}}/examples/node/Dockerfile {{TOP}}
+
+# Build the WASM module inside container
+build: build-image
+    docker run --rm -v {{TOP}}:/workspace -w /workspace {{IMAGE}} \
+        wasm-pack build /workspace/crates/harp-wasm --target nodejs --out-dir /workspace/pkg
+
+# Run the CLI in container
+run *ARGS: build
+    docker run --rm -v {{TOP}}:/workspace -w /workspace {{IMAGE}} \
+        node /workspace/examples/node/harp-cli.js {{ARGS}}
+
+# Build and run
+default: build run

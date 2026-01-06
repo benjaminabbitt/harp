@@ -1,0 +1,17 @@
+[package]
+name = "harp-wasm-core"
+version.workspace = true
+edition.workspace = true
+description = "WASI-compatible WASM module for harp (for Go, Python, etc.)"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+harp-core.workspace = true
+getrandom = "0.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true

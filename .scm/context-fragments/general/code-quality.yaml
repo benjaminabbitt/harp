@@ -1,0 +1,55 @@
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ DO NOT EDIT - Changes will be overwritten on next 'scm copy'              │
+# │ To customize: scm fragment edit {{name}} then re-run 'scm copy'          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+version: 1.0
+tags:
+    - code
+    - quality
+    - principles
+content: "# Code Quality Standards\n\n## Before Writing Code\n\n- **Research first**: Search the codebase for existing implementations before writing new code\n- **Read existing code**: Understand patterns, conventions, and utilities already in use\n- **No duplication**: Reuse existing functions, types, and modules rather than creating duplicates\n- **Extend, don't recreate**: If similar functionality exists, extend or refactor it instead of writing parallel implementations\n\n## Code Size\n- **Small**: Less than 500 lines of code per file\n- Keep files small and focused.  Only exceed small if necessary, with very high coupling and cohesion\n- Keep functions small.  Each function should do one thing and do it well\n- Optimize for reading and understanding, not performance\n- Prefer to separate via files interfaces and implementations\n\n## Naming\n- Interfaces/protocols (py) are the thing -- UserService is a Protocol.  Do not use IWhatever\n- Implementations are to be named after the description of *how* the thing, the interface, is implemented.  If it's implemented one way, it'll be Default{{InterfaceName}}. \n\n## Philosophy\n\n- **SOLID** - Single responsibility, Open/closed, Liskov substitution, Interface segregation, Dependency inversion\n- **KISS** - Keep It Simple, Stupid. Prefer clear, straightforward solutions\n- **YAGNI** - You Ain't Gonna Need It. Don't build features until they're actually needed\n\n## General Principles\n\n- Follow language-specific style guides\n- Use type hints/annotations where available\n- Write clear, self-documenting code over excessive comments\n- Document public APIs\n- Keep functions small and focused\n- Prefer composition over inheritance\n\n## Coupling and Cohesion\n\n- **Low coupling**: Modules should have minimal dependencies on other modules\n- **High cohesion**: Related functionality should be grouped together\n- Each module/class should have a single, well-defined purpose\n\n## Code Markers\n\n- `TODO` - Work that needs to be done\n- `FIXME` - Known bugs or issues that need fixing\n- `NOTE` - Important explanations or warnings\n- `HACK` - Non-ideal solutions that work but need improvement\n\n## Performance Considerations\n\n- Profile before optimizing\n- Document performance requirements in tests\n- Use appropriate data structures\n- State algorithmic complexity for non-trivial algorithms\n- Consider memory allocation patterns\n\n## Clean Up\n\n- Kill background processes when no longer needed\n- Remove unused code, files, imports, and variables\n- Don't leave dead code behind"
+content_hash: sha256:b8a61eb51d333a1d5c7969f18a102b3b7befb3f7dadb11911d841f6b65dbd812
+distilled: |-
+    # Code Quality
+
+    ## Before Writing
+    - Research codebase first; read existing patterns
+    - No duplication—reuse/extend existing code
+
+    ## Size
+    - Files <500 LOC; exceed only w/ high coupling+cohesion
+    - Small, single-purpose functions
+    - Optimize for readability
+    - Separate interfaces from implementations
+
+    ## Naming
+    - Interfaces = the thing (UserService is Protocol, no IWhatever)
+    - Implementations = Default{{InterfaceName}} or descriptive of *how*
+
+    ## Philosophy
+    - SOLID, KISS, YAGNI
+
+    ## Principles
+    - Follow lang style guides
+    - Use type hints
+    - Self-documenting code > comments
+    - Document public APIs
+    - Composition > inheritance
+
+    ## Coupling/Cohesion
+    - Low coupling, high cohesion
+    - Single well-defined purpose per module/class
+
+    ## Code Markers
+    - TODO, FIXME, NOTE, HACK
+
+    ## Performance
+    - Profile before optimizing
+    - Document perf requirements in tests
+    - Appropriate data structures
+    - State algorithmic complexity
+
+    ## Clean Up
+    - Kill unused background processes
+    - Remove dead code/files/imports/variables
+distilled_by: claude-code

@@ -1,0 +1,11 @@
+{
+  "name": "harp-cli-example",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "harp": "./harp-cli.js"
+  },
+  "scripts": {
+    "start": "node harp-cli.js"
+  }
+}

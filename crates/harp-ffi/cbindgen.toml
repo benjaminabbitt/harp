@@ -1,0 +1,18 @@
+[defines]
+
+[export]
+
+[layout]
+
+[fn]
+
+[struct]
+
+[enum]
+
+[const]
+
+[parse]
+parse_deps = false
+
+[macro_expansion]

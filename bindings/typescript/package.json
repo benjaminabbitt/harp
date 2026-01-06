@@ -1,0 +1,30 @@
+{
+  "name": "@babbitt/harp-wasm",
+  "version": "0.1.0",
+  "description": "Generate random names from adjectives and nouns (WASM)",
+  "type": "module",
+  "main": "pkg/harp_wasm.js",
+  "types": "pkg/harp_wasm.d.ts",
+  "files": [
+    "pkg"
+  ],
+  "scripts": {
+    "build": "wasm-pack build ../../crates/harp-wasm --target web --out-dir ../../bindings/typescript/pkg",
+    "build:node": "wasm-pack build ../../crates/harp-wasm --target nodejs --out-dir ../../bindings/typescript/pkg-node",
+    "test": "node --experimental-wasm-modules test.mjs"
+  },
+  "keywords": [
+    "wasm",
+    "rust",
+    "random",
+    "name",
+    "generator"
+  ],
+  "author": "babbitt",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/babbitt/harp.git",
+    "directory": "bindings/typescript"
+  }
+}

@@ -1,0 +1,5 @@
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
+
+[target.wasm32-wasip1]
+rustflags = ['-C', 'link-args=--initial-memory=33554432']

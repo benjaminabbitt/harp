@@ -1,0 +1,25 @@
+TOP := `git rev-parse --show-toplevel`
+IMAGE := "harp-go"
+
+# Build the container image
+build-image:
+    docker build -t {{IMAGE}} -f {{TOP}}/examples/go/Dockerfile {{TOP}}
+
+# Build the FFI library inside container
+build: build-image
+    docker run --rm -v {{TOP}}:/workspace -w /workspace {{IMAGE}} \
+        cargo build -p harp-ffi --release
+
+# Run the CLI in container
+run *ARGS: build
+    docker run --rm -v {{TOP}}:/workspace -w /workspace/examples/go \
+        -e LD_LIBRARY_PATH=/workspace/target/release \
+        {{IMAGE}} go run . {{ARGS}}
+
+# Build the Go binary
+build-go: build
+    docker run --rm -v {{TOP}}:/workspace -w /workspace/examples/go {{IMAGE}} \
+        go build -o harp-go .
+
+# Build and run
+default: build run

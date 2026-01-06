@@ -1,0 +1,19 @@
+TOP := `git rev-parse --show-toplevel`
+IMAGE := "harp-python"
+
+# Build the container image
+build-image:
+    docker build -t {{IMAGE}} -f {{TOP}}/examples/python/Dockerfile {{TOP}}
+
+# Build the Python wheel
+build: build-image
+    docker run --rm -v {{TOP}}:/workspace -w /workspace {{IMAGE}} \
+        maturin build -m /workspace/crates/harp-python/Cargo.toml --release -o /workspace/target/wheels
+
+# Run the CLI in container (builds wheel and installs it first)
+run *ARGS: build
+    docker run --rm -v {{TOP}}:/workspace -w /workspace {{IMAGE}} \
+        sh -c "pip install --quiet /workspace/target/wheels/*.whl && python3 /workspace/examples/python/harp_cli.py {{ARGS}}"
+
+# Build and run
+default: run

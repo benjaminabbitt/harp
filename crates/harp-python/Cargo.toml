@@ -1,0 +1,12 @@
+[package]
+name = "harp-python"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "harp"
+crate-type = ["cdylib"]
+
+[dependencies]
+harp-core.workspace = true
+pyo3 = { version = "0.23", features = ["extension-module"] }

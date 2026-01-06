@@ -1,0 +1,12 @@
+[package]
+name = "harp-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "harp"
+path = "src/main.rs"
+
+[dependencies]
+harp-core.workspace = true
+clap = { version = "4", features = ["derive"] }
