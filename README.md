@@ -1,6 +1,10 @@
 # Harp
 
+**H**uman **A**ppropriate **R**andom **P**hraselets
+
 Random name generator that creates human-readable names by combining adjectives and nouns.
+
+*Name credit: [AdamPIcode](https://old.reddit.com/user/AdamPIcode)*
 
 ```
 misty-golden-river
