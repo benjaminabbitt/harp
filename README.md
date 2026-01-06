@@ -2,23 +2,23 @@
 
 **H**uman **A**ppropriate **R**andom **P**hraselets
 
-Random name generator that creates human-readable names by combining adjectives and nouns.
-
-*Name credit: [AdamPIcode](https://old.reddit.com/user/AdamPIcode)*
+Generate memorable, human-readable random names from adjectives and nouns.
 
 ```
-misty-golden-river
-swift-amber-falcon
-quiet-silver-meadow
+swift-amber-falcon      quiet-silver-meadow     bold-crimson-thunder
+misty-golden-river      warm-velvet-horizon     keen-azure-summit
 ```
 
-## Features
+## Why Harp?
 
-- 17,874 adjectives and 55,191 nouns
-- Configurable: 2-16 components, custom separators, max element length
-- Multi-language: Rust, Python, Go, JavaScript/TypeScript, C/C++
+- **Massive vocabulary**: 17,874 adjectives × 55,191 nouns = billions of combinations
+- **Readable output**: No random strings, UUIDs, or hex—just words humans can remember and type
+- **One implementation**: Rust core shared across all platforms via FFI and WASM
+- **Zero config**: Works out of the box with sensible defaults
 
-## Installation
+Use cases: container names, temporary credentials, session IDs, test fixtures, branch names, anything that needs a memorable identifier.
+
+## Quick Start
 
 ### Rust
 
@@ -27,10 +27,10 @@ quiet-silver-meadow
 harp-core = "0.1"
 ```
 
-### CLI
+```rust
+use harp_core::generate_name;
 
-```bash
-cargo install harp-cli
+let name = generate_name();  // "swift-amber-falcon"
 ```
 
 ### Python
@@ -39,135 +39,165 @@ cargo install harp-cli
 pip install harp-names
 ```
 
+```python
+import harp
+
+name = harp.generate_name()  # "swift-amber-falcon"
+```
+
 ### Go
 
 ```bash
 go get github.com/babbitt/harp/bindings/go
 ```
 
-### JavaScript/TypeScript
+```go
+import "github.com/babbitt/harp/bindings/go"
+
+name := harp.GenerateName()  // "swift-amber-falcon"
+```
+
+### JavaScript / TypeScript
 
 ```bash
 npm install @babbitt/harp-wasm
 ```
 
-## Usage
+```javascript
+import init, { generate_name } from '@babbitt/harp-wasm';
 
-### Rust
-
-```rust
-use harp_core::{generate_name, generate_name_with_options, NameOptions};
-
-// Default: 2 adjectives + 1 noun
-let name = generate_name();
-// => "misty-golden-river"
-
-// Custom options
-let opts = NameOptions {
-    components: 2,
-    max_element_length: Some(5),
-    separator: "_".to_string(),
-};
-let name = generate_name_with_options(&opts);
-// => "swift_hawk"
+await init();
+const name = generate_name();  // "swift-amber-falcon"
 ```
 
 ### CLI
 
 ```bash
-harp
-# => misty-golden-river
+cargo install harp-cli
+```
+
+```bash
+$ harp
+swift-amber-falcon
+```
+
+## Options
+
+All bindings support the same configuration:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `components` | 2-16 | 3 | Number of words (N-1 adjectives + 1 noun) |
+| `max_element_length` | uint | none | Maximum characters per word |
+| `separator` | string | `"-"` | Delimiter between words |
+
+### Rust
+
+```rust
+use harp_core::{generate_name_with_options, NameOptions};
+
+let opts = NameOptions {
+    components: 2,
+    max_element_length: Some(5),
+    separator: "_".to_string(),
+};
+let name = generate_name_with_options(&opts);  // "bold_hawk"
 ```
 
 ### Python
 
 ```python
-import harp
-
-name = harp.generate_name()
-# => "misty-golden-river"
-
-name = harp.generate_name_with_options(components=2, separator="_")
-# => "swift_hawk"
+name = harp.generate_name_with_options(
+    components=2,
+    max_element_length=5,
+    separator="_"
+)  # "bold_hawk"
 ```
 
 ### Go
 
 ```go
-import "github.com/babbitt/harp/bindings/go"
-
-name := harp.GenerateName()
-// => "misty-golden-river"
-
-name = harp.GenerateNameWithOptions(2, 0, "_")
-// => "swift_hawk"
-```
-
-### JavaScript/TypeScript
-
-```javascript
-import init, { generate_name } from '@babbitt/harp-wasm';
-
-await init();
-const name = generate_name();
-// => "misty-golden-river"
-```
-
-## Building
-
-Requires [just](https://github.com/casey/just) command runner.
-
-```bash
-# Build all Rust crates
-just build
-
-# Run tests
-just test
-
-# Build Python bindings (requires maturin)
-just build-python
-
-# Build WASM bindings (requires wasm-pack)
-just build-wasm
-
-# Build Go bindings
-just build-wasm-core
-just test-go
-
-# See all commands
-just --list
-```
-
-### Docker
-
-```bash
-# Build everything in Docker
-just docker-all
-
-# Individual builds
-just docker-rust
-just docker-python
-just docker-go
-just docker-wasm
+opts := harp.Options{
+    Components:       2,
+    MaxElementLength: 5,
+    Separator:        "_",
+}
+name := harp.GenerateNameWithOptions(opts)  // "bold_hawk"
 ```
 
 ## Architecture
 
+Single Rust implementation, multiple bindings:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                       harp-core                         │
+│            (Rust library, word lists, RNG)              │
+└───────────┬───────────┬───────────┬───────────┬─────────┘
+            │           │           │           │
+     ┌──────┴──┐   ┌────┴────┐  ┌───┴───┐  ┌────┴────┐
+     │ harp-cli│   │harp-ffi │  │harp-  │  │harp-wasm│
+     │  (bin)  │   │  (C ABI)│  │python │  │(wasm32) │
+     └─────────┘   └────┬────┘  │(PyO3) │  └────┬────┘
+                        │       └───────┘       │
+                   C/C++/Go*              Browser/Node.js
+                                               │
+                                          ┌────┴────┐
+                                          │   Go    │
+                                          │(wazero) │
+                                          └─────────┘
+
+* Go can use either FFI (cgo) or embedded WASM (pure Go, no CGO)
+```
+
+The Go binding embeds a ~375KB WASM binary and uses the wazero runtime—pure Go with no native dependencies.
+
+## Building
+
+Requires [just](https://github.com/casey/just).
+
+```bash
+just build          # Build Rust crates
+just test           # Run tests
+just build-python   # Build Python wheel (requires maturin)
+just build-wasm     # Build WASM (requires wasm-pack)
+just build-wasm-core && just test-go  # Build and test Go bindings
+just --list         # Show all commands
+```
+
+### Docker
+
+Build without local toolchain:
+
+```bash
+just docker-all     # Build everything
+just docker-rust    # Rust + CLI
+just docker-python  # Python wheel
+just docker-go      # Go bindings
+just docker-wasm    # WASM packages
+```
+
+## Project Structure
+
 ```
 crates/
-├── harp-core        # Core library
-├── harp-cli         # Command-line interface
-├── harp-ffi         # C FFI bindings
-├── harp-python      # Python bindings (PyO3)
-├── harp-wasm        # Browser/Node.js WASM
-└── harp-wasm-core   # WASI WASM (for Go)
+├── harp-core         # Core library (words, generation)
+├── harp-cli          # Command-line tool
+├── harp-ffi          # C FFI for native bindings
+├── harp-python       # PyO3 Python bindings
+├── harp-wasm         # wasm-bindgen for browser/Node
+└── harp-wasm-core    # WASI WASM for Go runtime
 
 bindings/
-├── go/              # Go package
-├── typescript/      # npm package
-└── python/          # PyPI package
+├── go/               # Go package (embeds WASM)
+├── typescript/       # npm package
+└── python/           # PyPI metadata
 ```
 
 ## License
 
 BSD-3-Clause
+
+---
+
+*Name credit: [AdamPIcode](https://old.reddit.com/user/AdamPIcode)*
