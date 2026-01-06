@@ -1,4 +1,4 @@
-module github.com/babbitt/harp-go
+module github.com/benjaminabbitt/harp/bindings/go
 
 go 1.21
 

@@ -17,7 +17,7 @@ This design prioritizes correctness and maintainability over optimal performance
 ## Installation
 
 ```bash
-go get github.com/babbitt/harp-go
+go get github.com/benjaminabbitt/harp/bindings/go
 ```
 
 No native compilation required - the WASM binary is embedded.
@@ -29,7 +29,7 @@ package main
 
 import (
     "fmt"
-    harp "github.com/babbitt/harp-go"
+    harp "github.com/benjaminabbitt/harp/bindings/go"
 )
 
 func main() {

@@ -24,7 +24,7 @@
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/babbitt/harp.git",
+    "url": "https://github.com/benjaminabbitt/harp.git",
     "directory": "bindings/typescript"
   }
 }

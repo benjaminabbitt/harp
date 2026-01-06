@@ -48,11 +48,11 @@ name = harp.generate_name()  # "swift-amber-falcon"
 ### Go
 
 ```bash
-go get github.com/babbitt/harp/bindings/go
+go get github.com/benjaminabbitt/harp/bindings/go
 ```
 
 ```go
-import "github.com/babbitt/harp/bindings/go"
+import "github.com/benjaminabbitt/harp/bindings/go"
 
 name := harp.GenerateName()  // "swift-amber-falcon"
 ```
