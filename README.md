@@ -90,7 +90,7 @@ await init();
 const name = generate_name();  // "swift-amber-falcon"
 ```
 
-### CLI
+### CLI (Rust)
 
 ```bash
 cargo install harp-cli
@@ -99,6 +99,23 @@ cargo install harp-cli
 ```bash
 $ harp
 swift-amber-falcon
+```
+
+### CLI (Go)
+
+```bash
+go install github.com/benjaminabbitt/harp/bindings/go/cmd/harp@latest
+```
+
+```bash
+$ harp
+swift-amber-falcon
+
+$ harp -c 2           # 2 components
+bold-falcon
+
+$ harp -s "_"         # custom separator
+swift_amber_falcon
 ```
 
 ## Options

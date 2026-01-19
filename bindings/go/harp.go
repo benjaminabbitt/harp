@@ -4,6 +4,7 @@ package harp
 
 import (
 	"context"
+	cryptorand "crypto/rand"
 	_ "embed"
 	"sync"
 
@@ -43,7 +44,8 @@ func initWasm() error {
 		return err
 	}
 
-	instance, err = runtime.InstantiateModule(ctx, mod, wazero.NewModuleConfig())
+	instance, err = runtime.InstantiateModule(ctx, mod, wazero.NewModuleConfig().
+		WithRandSource(cryptorand.Reader))
 	if err != nil {
 		initErr = err
 		return err
