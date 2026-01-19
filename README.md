@@ -11,12 +11,32 @@ misty-golden-river      warm-velvet-horizon     keen-azure-summit
 
 ## Why Harp?
 
-- **Massive vocabulary**: 17,874 adjectives × 55,191 nouns = billions of combinations
+- **Words people know**: 1,269 adjectives × 4,396 nouns = 5.6 million combinations using only familiar words
 - **Readable output**: No random strings, UUIDs, or hex—just words humans can remember and type
 - **One implementation**: Rust core shared across all platforms via FFI and WASM
 - **Zero config**: Works out of the box with sensible defaults
 
 Use cases: container names, temporary credentials, session IDs, test fixtures, branch names, anything that needs a memorable identifier.
+
+## Word Lists
+
+The word lists are curated for **familiarity**—words a college-educated English speaker would recognize immediately.
+
+**Approach:**
+
+1. Start with [EFF Diceware](https://www.eff.org/dice) (7,776 words) — curated for word recognition, concreteness, and memorability
+2. Tag parts of speech using [Moby Project](https://en.wikipedia.org/wiki/Moby_Project) dictionary (233K words with POS)
+3. Intersect to get EFF words properly classified as nouns or adjectives
+4. Filter adjectives to exclude words that are also nouns (avoid "cardboard-shoe")
+
+**Result:**
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| Adjectives | 1,269 | blissful, cautious, geometric, playful, rigid |
+| Nouns | 4,396 | falcon, meadow, thunder, horizon, summit |
+
+This gives 5.6 million unique name combinations while ensuring every word is immediately recognizable.
 
 ## Quick Start
 

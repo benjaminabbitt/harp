@@ -3,6 +3,8 @@
 //! This crate exposes harp-core functionality via C ABI for use by Go and other
 //! languages that can call C functions.
 
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use std::ffi::{c_char, c_uchar, c_uint, CStr, CString};
 
 /// Generate a random name. Caller must free the returned string with `harp_free_string`.

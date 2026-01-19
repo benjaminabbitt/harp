@@ -61,7 +61,11 @@ pub fn generate_name_with_options(opts: &NameOptions) -> String {
     let mut rng = rand::rng();
 
     let adjectives: Vec<&str> = match opts.max_element_length {
-        Some(len) => ADJECTIVES.iter().filter(|w| w.len() <= len).copied().collect(),
+        Some(len) => ADJECTIVES
+            .iter()
+            .filter(|w| w.len() <= len)
+            .copied()
+            .collect(),
         None => ADJECTIVES.iter().copied().collect(),
     };
     let nouns: Vec<&str> = match opts.max_element_length {
@@ -111,7 +115,10 @@ mod tests {
             words::ADJECTIVES.contains(&parts[1]),
             "second word should be adjective"
         );
-        assert!(words::NOUNS.contains(&parts[2]), "third word should be noun");
+        assert!(
+            words::NOUNS.contains(&parts[2]),
+            "third word should be noun"
+        );
     }
 
     #[test]

@@ -2,6 +2,8 @@
 //!
 //! Exports simple C-style functions for use with wazero, wasmer, wasmtime, etc.
 
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use std::alloc::{alloc, dealloc, Layout};
 use std::ptr;
 

@@ -8,7 +8,9 @@ const NOUNS_GZ: &[u8] = include_bytes!("../data/nouns.txt.gz");
 fn decompress(data: &[u8]) -> String {
     let mut decoder = GzDecoder::new(data);
     let mut s = String::new();
-    decoder.read_to_string(&mut s).expect("failed to decompress");
+    decoder
+        .read_to_string(&mut s)
+        .expect("failed to decompress");
     s
 }
 
