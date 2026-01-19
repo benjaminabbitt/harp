@@ -110,35 +110,22 @@ func GenerateNameWithOptions(opts Options) string {
 		instance.Memory().Write(sepPtr, sepBytes)
 	}
 
-	// First call with nil buffer to get required size
-	results, err = genFn.Call(ctx,
-		uint64(opts.Components),
-		uint64(opts.MaxElementLength),
-		uint64(sepPtr),
-		uint64(len(sepBytes)),
-		0, // null buffer
-		0, // zero length
-	)
-	if err != nil {
-		panic("harp: generate failed: " + err.Error())
-	}
-	requiredLen := uint32(results[0])
-
-	// Allocate buffer for result
-	results, err = allocFn.Call(ctx, uint64(requiredLen))
+	// Allocate a buffer large enough for any name (max ~256 bytes)
+	const bufSize = 256
+	results, err = allocFn.Call(ctx, bufSize)
 	if err != nil {
 		panic("harp: alloc failed: " + err.Error())
 	}
 	bufPtr := uint32(results[0])
 
-	// Call again with buffer
+	// Generate name into buffer
 	results, err = genFn.Call(ctx,
 		uint64(opts.Components),
 		uint64(opts.MaxElementLength),
 		uint64(sepPtr),
 		uint64(len(sepBytes)),
 		uint64(bufPtr),
-		uint64(requiredLen),
+		bufSize,
 	)
 	if err != nil {
 		panic("harp: generate failed: " + err.Error())
@@ -153,7 +140,7 @@ func GenerateNameWithOptions(opts Options) string {
 	result := string(buf)
 
 	// Free allocated memory
-	freeFn.Call(ctx, uint64(bufPtr), uint64(requiredLen))
+	freeFn.Call(ctx, uint64(bufPtr), bufSize)
 	if sepPtr != 0 {
 		freeFn.Call(ctx, uint64(sepPtr), uint64(len(sepBytes)))
 	}
