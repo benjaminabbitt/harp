@@ -44,9 +44,14 @@ run:
 build-python:
     cd crates/harp-python && maturin build --release
 
-# Build and install Python bindings in current venv
+# Build and install Python bindings in current environment
 install-python:
-    cd crates/harp-python && maturin develop
+    cd crates/harp-python && maturin develop --release
+
+# Install Python wheel with uv into .venv
+install-python-uv: build-python
+    [ -d .venv ] || uv venv --python 3.13
+    uv pip install target/wheels/harp_names-*.whl --force-reinstall
 
 # Test Python bindings
 test-python: install-python
