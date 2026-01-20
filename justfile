@@ -81,31 +81,31 @@ build-wasm-node:
 test-wasm: build-wasm
     cd bindings/typescript && node --experimental-wasm-modules test.mjs
 
-# === Docker ===
+# === Container Builds (Podman) ===
 
-# Build Rust library in Docker (includes UPX compression)
-docker-rust:
-    docker compose run --rm rust
+# Build Rust library in container (includes UPX compression)
+container-rust:
+    podman-compose run --rm rust
 
-# Build Python wheel in Docker
-docker-python:
-    docker compose run --rm python
+# Build Python wheel in container
+container-python:
+    podman-compose run --rm python
 
-# Build and test Go bindings in Docker
-docker-go:
-    docker compose run --rm go
+# Build and test Go bindings in container
+container-go:
+    podman-compose run --rm go
 
-# Build and test WASM in Docker
-docker-wasm:
-    docker compose run --rm wasm
+# Build and test WASM in container
+container-wasm:
+    podman-compose run --rm wasm
 
-# Build CLI Docker image
-docker-cli:
-    docker compose build cli
+# Build CLI container image
+container-cli:
+    podman-compose build cli
 
-# Build all in Docker
-docker-all: docker-rust docker-python docker-go docker-wasm docker-cli
-    @echo "All Docker builds complete"
+# Build all in containers
+container-all: container-rust container-python container-go container-wasm container-cli
+    @echo "All container builds complete"
 
 # === Development ===
 
