@@ -3,9 +3,14 @@
 //! Generates random names by combining adjectives and nouns.
 
 mod error;
+pub mod indexed;
 pub mod words;
 
 pub use error::{Error, Result};
+pub use indexed::{
+    generate_name_with_options_and_seed, generate_name_with_seed, IndexError, NameSpace,
+    Permutation, SCHEME_VERSION,
+};
 pub use words::{ADJECTIVES, NOUNS};
 
 use rand::seq::IndexedRandom;
