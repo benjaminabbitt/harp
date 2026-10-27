@@ -6,6 +6,7 @@ import (
 	"context"
 	cryptorand "crypto/rand"
 	_ "embed"
+	"errors"
 	"sync"
 
 	"github.com/tetratelabs/wazero"
@@ -56,13 +57,19 @@ func initWasm() error {
 
 // Options for generating names.
 type Options struct {
-	// Number of components (2-16). Default: 3
+	// Number of components (2-4). Default: 3
 	Components uint8
-	// Maximum length per element. 0 means no limit.
+	// Maximum length per element. 0 means no limit. A length that leaves no
+	// adjective or no noun is refused.
 	MaxElementLength uint
-	// Separator between components. Default: "-"
+	// Separator between components. Default: "-". It must be non-empty and
+	// hold no a-z; an empty separator is refused, not defaulted.
 	Separator string
 }
+
+// errorFlag marks harp_generate_name_with_options's result as a refusal,
+// whose message is in the buffer (harp-wasm-core's HARP_ERROR_FLAG).
+const errorFlag = 1 << 31
 
 // DefaultOptions returns the default options.
 func DefaultOptions() Options {
@@ -75,11 +82,17 @@ func DefaultOptions() Options {
 
 // GenerateName generates a random name from two adjectives and a noun.
 func GenerateName() string {
-	return GenerateNameWithOptions(DefaultOptions())
+	name, err := GenerateNameWithOptions(DefaultOptions())
+	if err != nil {
+		panic("harp: the default options were refused: " + err.Error())
+	}
+	return name
 }
 
-// GenerateNameWithOptions generates a random name with custom options.
-func GenerateNameWithOptions(opts Options) string {
+// GenerateNameWithOptions generates a random name with custom options. It
+// returns an error when the options are refused: components outside 2-4, a
+// length that leaves no word, or an empty or ambiguous separator.
+func GenerateNameWithOptions(opts Options) (string, error) {
 	if err := initWasm(); err != nil {
 		panic("harp: failed to init wasm: " + err.Error())
 	}
@@ -96,11 +109,7 @@ func GenerateNameWithOptions(opts Options) string {
 	genFn := instance.ExportedFunction("harp_generate_name_with_options")
 
 	// Allocate buffer for separator
-	sep := opts.Separator
-	if sep == "" {
-		sep = "-"
-	}
-	sepBytes := []byte(sep)
+	sepBytes := []byte(opts.Separator)
 
 	// Allocate memory for separator
 	results, err := allocFn.Call(ctx, uint64(len(sepBytes)))
@@ -132,7 +141,11 @@ func GenerateNameWithOptions(opts Options) string {
 	if err != nil {
 		panic("harp: generate failed: " + err.Error())
 	}
-	actualLen := uint32(results[0])
+	refused := uint32(results[0])&errorFlag != 0
+	actualLen := uint32(results[0]) &^ errorFlag
+	if actualLen > bufSize {
+		panic("harp: result larger than the buffer")
+	}
 
 	// Read result from memory
 	buf, ok := instance.Memory().Read(bufPtr, actualLen)
@@ -147,7 +160,10 @@ func GenerateNameWithOptions(opts Options) string {
 		freeFn.Call(ctx, uint64(sepPtr), uint64(len(sepBytes)))
 	}
 
-	return result
+	if refused {
+		return "", errors.New("harp: " + result)
+	}
+	return result, nil
 }
 
 // Version returns the library version.

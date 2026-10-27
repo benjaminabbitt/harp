@@ -9,20 +9,22 @@ pub mod words;
 pub use error::{Error, Result};
 pub use indexed::{
     generate_name_with_options_and_seed, generate_name_with_seed, IndexError, NameSpace,
-    Permutation, SCHEME_VERSION,
+    Permutation, MAX_COMPONENTS, MIN_COMPONENTS, SCHEME_VERSION,
 };
 pub use words::{ADJECTIVES, NOUNS};
 
-use rand::seq::IndexedRandom;
-
-/// Options for generating names.
+/// Options for generating names. Every function taking them validates them
+/// strictly and refuses, never clamps: see [`IndexError`].
 #[derive(Debug, Clone)]
 pub struct NameOptions {
-    /// Number of components (2-16). Default: 3
+    /// Number of components, 2-4 (N-1 adjectives and a noun). Default: 3
     pub components: u8,
-    /// Maximum length per element. None means no limit.
+    /// Maximum length per element. None means no limit. A limit that leaves
+    /// no adjective or no noun is refused.
     pub max_element_length: Option<usize>,
-    /// Separator between components. Default: "-"
+    /// Separator between components. Default: "-". It must be non-empty and
+    /// hold no ASCII lowercase letter, so a name splits back into its words
+    /// one way only.
     pub separator: String,
 }
 
@@ -45,55 +47,34 @@ impl Default for NameOptions {
 /// assert_eq!(name.matches('-').count(), 2);
 /// ```
 pub fn generate_name() -> String {
-    generate_name_with_options(&NameOptions::default())
+    generate_name_with_options(&NameOptions::default()).expect("the default options are valid")
 }
 
-/// Generates a random name with custom options.
+/// Generates a random name with custom options, uniformly over the space
+/// they describe. Refuses components outside 2..=4, a length filter that
+/// empties a word list, and an ambiguous separator.
 ///
 /// # Example
 /// ```
-/// use harp_core::{generate_name_with_options, NameOptions};
+/// use harp_core::{generate_name_with_options, IndexError, NameOptions};
 ///
 /// let opts = NameOptions {
 ///     components: 2,
 ///     max_element_length: Some(5),
 ///     separator: "_".to_string(),
 /// };
-/// let name = generate_name_with_options(&opts);
+/// let name = generate_name_with_options(&opts)?;
 /// assert!(name.contains('_'));
+///
+/// let five = NameOptions { components: 5, ..Default::default() };
+/// assert_eq!(
+///     generate_name_with_options(&five),
+///     Err(IndexError::InvalidComponents(5))
+/// );
+/// # Ok::<(), IndexError>(())
 /// ```
-pub fn generate_name_with_options(opts: &NameOptions) -> String {
-    let mut rng = rand::rng();
-
-    let adjectives: Vec<&str> = match opts.max_element_length {
-        Some(len) => ADJECTIVES
-            .iter()
-            .filter(|w| w.len() <= len)
-            .copied()
-            .collect(),
-        None => ADJECTIVES.iter().copied().collect(),
-    };
-    let nouns: Vec<&str> = match opts.max_element_length {
-        Some(len) => NOUNS.iter().filter(|w| w.len() <= len).copied().collect(),
-        None => NOUNS.iter().copied().collect(),
-    };
-
-    let components = opts.components.clamp(2, 16);
-    let mut parts: Vec<&str> = Vec::with_capacity(components as usize);
-
-    // Add adjectives (components - 1)
-    for _ in 0..(components - 1) {
-        if let Some(adj) = adjectives.choose(&mut rng) {
-            parts.push(adj);
-        }
-    }
-
-    // Add noun
-    if let Some(noun) = nouns.choose(&mut rng) {
-        parts.push(noun);
-    }
-
-    parts.join(&opts.separator)
+pub fn generate_name_with_options(opts: &NameOptions) -> std::result::Result<String, IndexError> {
+    Ok(NameSpace::new(opts)?.random_name(&mut rand::rng()))
 }
 
 #[cfg(test)]

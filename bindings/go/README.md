@@ -42,7 +42,10 @@ func main() {
         MaxElementLength: 6,
         Separator:        "_",
     }
-    name = harp.GenerateNameWithOptions(opts)
+    name, err := harp.GenerateNameWithOptions(opts)
+    if err != nil {
+        panic(err)
+    }
     fmt.Println(name) // e.g., "calm_warm_soft_oak"
 }
 ```
@@ -50,7 +53,7 @@ func main() {
 ## API
 
 - `GenerateName()` - Generate a random name (2 adjectives + 1 noun)
-- `GenerateNameWithOptions(opts)` - Generate with custom options
+- `GenerateNameWithOptions(opts) (string, error)` - Generate with custom options; returns an error (never clamps) for components outside 2-4, a length that leaves no word, or a separator that is empty or contains a-z
 - `Version()` - Get the library version
 - `DefaultOptions()` - Get default options
 

@@ -1,4 +1,5 @@
-//! RED PROPOSAL tests for indexed and seeded-permutation naming (scheme v1).
+//! Tests for indexed and seeded-permutation naming (scheme v1), and the
+//! strict option validation every generator shares.
 //!
 //! The fixed vectors were computed by an independent Python model of the
 //! scheme written in `harp_core::indexed`'s module docs. They pin the word

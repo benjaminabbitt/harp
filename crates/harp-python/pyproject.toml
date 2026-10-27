@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "harp-names"
-version = "0.1.0"
+version = "0.1.1"
 description = "Generate random names from adjectives and nouns"
 readme = "README.md"
 license = { text = "BSD-3-Clause" }

@@ -19,7 +19,7 @@ print(name)  # e.g., "misty-golden-river"
 
 # Generate with options
 name = harp.generate_name_with_options(
-    components=2,              # 2-16 words
+    components=2,              # 2-4 words
     max_element_length=5,      # max chars per word (None = no limit)
     separator="_"              # custom separator
 )
@@ -29,7 +29,7 @@ print(name)  # e.g., "bold_hawk"
 ## API
 
 - `generate_name()` - Generate a random name (2 adjectives + 1 noun)
-- `generate_name_with_options(components=3, max_element_length=None, separator="-")` - Generate with options
+- `generate_name_with_options(components=3, max_element_length=None, separator="-")` - Generate with options; raises `ValueError` for components outside 2-4, a length that leaves no word, or a separator that is empty or contains a-z
 - `version()` - Get the library version
 
 ## License

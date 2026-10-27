@@ -120,13 +120,16 @@ swift_amber_falcon
 
 ## Options
 
-All bindings support the same configuration:
+All bindings support the same configuration, and every binding validates it
+strictly: options outside these rules are **refused, never clamped** (an
+error in Rust and Go, `ValueError` in Python, a thrown `Error` in JavaScript,
+NULL from the C ABI).
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `components` | 2-16 | 3 | Number of words (N-1 adjectives + 1 noun) |
-| `max_element_length` | uint | none | Maximum characters per word |
-| `separator` | string | `"-"` | Delimiter between words |
+| `components` | 2-4 | 3 | Number of words (N-1 adjectives + 1 noun) |
+| `max_element_length` | uint | none | Maximum characters per word; a limit that leaves no adjective or no noun is refused |
+| `separator` | string | `"-"` | Delimiter between words; must be non-empty and contain no `a-z`, so a name splits back into its words one way |
 
 ### Rust
 
@@ -138,7 +141,7 @@ let opts = NameOptions {
     max_element_length: Some(5),
     separator: "_".to_string(),
 };
-let name = generate_name_with_options(&opts);  // "bold_hawk"
+let name = generate_name_with_options(&opts)?;  // "bold_hawk"
 ```
 
 ### Python
@@ -159,8 +162,31 @@ opts := harp.Options{
     MaxElementLength: 5,
     Separator:        "_",
 }
-name := harp.GenerateNameWithOptions(opts)  // "bold_hawk"
+name, err := harp.GenerateNameWithOptions(opts)  // "bold_hawk"
 ```
+
+## Seeded, unique names (Rust)
+
+`harp_core::indexed` numbers every name in a space and walks it in a seeded
+order, so a store can issue names that are unique by construction, with no
+retry on collision:
+
+```rust
+use harp_core::{NameOptions, NameSpace};
+
+let space = NameSpace::new(&NameOptions { components: 2, ..Default::default() })?;
+// A store keeps (SCHEME_VERSION, options, seed) and the NEXT position,
+// starting at 0. Each mint claims `next` and increments it; `next == size()`
+// means the sequence is exhausted (it never wraps).
+let first = space.name_at_position(42, 0)?;   // "rigid-chapter"
+assert_eq!(space.position_of(42, &first)?, 0);
+```
+
+`generate_name_with_seed(seed)` and `generate_name_with_options_and_seed(opts,
+seed)` return position 0 of the seed's sequence. `name_at`/`index_of` map
+between names and their index in alphabetical order; a name whose words are
+not in the lists is refused (`UnknownWord`). The scheme (word lists, index
+mapping, and an 8-round Feistel permutation) is versioned by `SCHEME_VERSION`.
 
 ## Architecture
 

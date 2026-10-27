@@ -8,19 +8,29 @@ pub fn generate_name() -> String {
     harp_core::generate_name()
 }
 
-/// Generate a random name with options.
+/// Generate a random name with options. Throws when the options are refused
+/// (components outside 2-4, a length that leaves no word, or an ambiguous
+/// separator).
 #[wasm_bindgen]
 pub fn generate_name_with_options(
     components: u8,
     max_element_length: Option<usize>,
     separator: &str,
-) -> String {
-    let opts = harp_core::NameOptions {
+) -> Result<String, JsError> {
+    with_options(components, max_element_length, separator)
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
+fn with_options(
+    components: u8,
+    max_element_length: Option<usize>,
+    separator: &str,
+) -> Result<String, harp_core::IndexError> {
+    harp_core::generate_name_with_options(&harp_core::NameOptions {
         components,
         max_element_length,
         separator: separator.to_string(),
-    };
-    harp_core::generate_name_with_options(&opts)
+    })
 }
 
 /// Get the library version.
@@ -47,7 +57,8 @@ mod tests {
         assert!(name.contains('_'));
     }
 
-    #[wasm_bindgen_test]
+    // A plain test: the helper runs natively, where wasm_bindgen_test does not.
+    #[test]
     fn test_generate_name_with_options_refuses_five_components() {
         assert_eq!(
             with_options(5, None, "-").unwrap_err(),
