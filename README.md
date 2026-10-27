@@ -188,6 +188,12 @@ between names and their index in alphabetical order; a name whose words are
 not in the lists is refused (`UnknownWord`). The scheme (word lists, index
 mapping, and an 8-round Feistel permutation) is versioned by `SCHEME_VERSION`.
 
+Python exposes the seeded forms as `harp.generate_name_with_seed(seed)` and
+`harp.generate_name_with_options_and_seed(seed, components=3,
+max_element_length=None, separator="-")`, with `harp.SCHEME_VERSION`; a seed
+that is not an `int` in `0..2**64` is refused. The other bindings do not
+expose seeded naming yet.
+
 ## Architecture
 
 Single Rust implementation, multiple bindings:

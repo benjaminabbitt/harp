@@ -53,9 +53,11 @@ install-python-uv: build-python
     [ -d .venv ] || uv venv --python 3.13
     uv pip install target/wheels/harp_names-*.whl --force-reinstall
 
-# Test Python bindings
-test-python: install-python
-    python -c "import harp; print(f'name={harp.generate_name()}'); print(f'version={harp.version()}')"
+# Test Python bindings: build a wheel, install it in a throwaway env, run pytest
+test-python:
+    rm -rf target/python-test-wheel
+    cd crates/harp-python && maturin build --release --interpreter python3.13 --out ../../target/python-test-wheel
+    uv run --isolated --no-project --python 3.13 --reinstall-package harp-names --with pytest --with target/python-test-wheel/harp_names-*.whl pytest crates/harp-python/tests -q
 
 # === Go ===
 
