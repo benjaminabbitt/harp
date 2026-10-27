@@ -139,7 +139,7 @@ mod tests {
             components: 2,
             ..Default::default()
         };
-        let name = generate_name_with_options(&opts);
+        let name = generate_name_with_options(&opts).unwrap();
         assert_eq!(name.matches('-').count(), 1);
     }
 
@@ -149,28 +149,22 @@ mod tests {
             components: 4,
             ..Default::default()
         };
-        let name = generate_name_with_options(&opts);
+        let name = generate_name_with_options(&opts).unwrap();
         assert_eq!(name.matches('-').count(), 3);
     }
 
     #[test]
-    fn test_sixteen_components() {
-        let opts = NameOptions {
-            components: 16,
-            ..Default::default()
-        };
-        let name = generate_name_with_options(&opts);
-        assert_eq!(name.matches('-').count(), 15);
-    }
-
-    #[test]
-    fn test_components_clamped_to_max() {
-        let opts = NameOptions {
-            components: 20,
-            ..Default::default()
-        };
-        let name = generate_name_with_options(&opts);
-        assert_eq!(name.matches('-').count(), 15); // clamped to 16
+    fn test_components_past_four_are_refused_not_clamped() {
+        for components in [5, 16, 20] {
+            let opts = NameOptions {
+                components,
+                ..Default::default()
+            };
+            assert_eq!(
+                generate_name_with_options(&opts).unwrap_err(),
+                IndexError::InvalidComponents(components)
+            );
+        }
     }
 
     #[test]
@@ -179,7 +173,7 @@ mod tests {
             max_element_length: Some(4),
             ..Default::default()
         };
-        let name = generate_name_with_options(&opts);
+        let name = generate_name_with_options(&opts).unwrap();
         for part in name.split('-') {
             assert!(part.len() <= 4, "part too long: {part}");
         }
@@ -191,7 +185,7 @@ mod tests {
             separator: "_".to_string(),
             ..Default::default()
         };
-        let name = generate_name_with_options(&opts);
+        let name = generate_name_with_options(&opts).unwrap();
         assert!(name.contains('_'));
         assert!(!name.contains('-'));
     }

@@ -8,8 +8,8 @@
 //! bump `SCHEME_VERSION`.
 
 use harp_core::{
-    generate_name_with_options_and_seed, generate_name_with_seed, IndexError, NameOptions,
-    NameSpace, Permutation, ADJECTIVES, NOUNS, SCHEME_VERSION,
+    generate_name_with_options, generate_name_with_options_and_seed, generate_name_with_seed,
+    IndexError, NameOptions, NameSpace, Permutation, ADJECTIVES, NOUNS, SCHEME_VERSION,
 };
 use std::collections::HashSet;
 
@@ -74,20 +74,28 @@ fn word_lists_are_strictly_ascending_lowercase_and_disjoint() {
 fn size_is_the_product_of_the_list_lengths() {
     assert_eq!(space(2).size(), 5_578_524);
     assert_eq!(space(3).size(), 7_079_146_956);
-    assert_eq!(space(6).size(), 14_466_577_375_266_906_204);
+    // The cap: four components is the largest space, and it fits u64 (and
+    // i64, a SQLite INTEGER) with room to spare.
+    assert_eq!(space(4).size(), 8_983_437_487_164);
+    assert!(space(4).size() < i64::MAX as u64);
     assert_eq!(small(2).size(), 140);
     assert_eq!(small(3).size(), 280);
 }
 
 #[test]
-fn a_space_past_u64_is_refused() {
-    let err = NameSpace::new(&opts(7, None, "-")).unwrap_err();
-    assert_eq!(err, IndexError::SpaceTooLarge { components: 7 });
+fn more_than_four_components_are_refused() {
+    // "Anything more than that isn't really a harp": the cap is 4, so no
+    // accepted space can outgrow u64.
+    for c in [5, 6, 7, 16] {
+        let err = NameSpace::new(&opts(c, None, "-")).unwrap_err();
+        assert_eq!(err, IndexError::InvalidComponents(c));
+    }
+    assert!(NameSpace::new(&opts(4, None, "-")).is_ok());
 }
 
 #[test]
 fn options_are_refused_not_clamped() {
-    for c in [0, 1, 17, 20] {
+    for c in [0, 1, 5, 17, 20] {
         let err = NameSpace::new(&opts(c, None, "-")).unwrap_err();
         assert_eq!(err, IndexError::InvalidComponents(c));
     }
@@ -204,7 +212,7 @@ fn name_at_and_index_of_are_a_bijection_over_a_small_space() {
 
 #[test]
 fn name_at_and_index_of_round_trip_across_the_full_space() {
-    for components in [2, 3, 6] {
+    for components in [2, 3, 4] {
         let sp = space(components);
         let n = sp.size();
         for i in [0, 1, 2, n / 3, n / 2, n - 2, n - 1] {
@@ -355,6 +363,27 @@ fn seeded_vectors_in_a_filtered_space_with_another_separator() {
     assert_eq!(first, ["icy_sip", "icy_tug", "icy_hut"]);
 }
 
+/// Positions are 0-based and a store keeps the NEXT one, starting at 0: a
+/// mint claims `next` and increments it. The last name is at `size - 1`;
+/// `next == size` means exhausted, and the sequence never wraps.
+#[test]
+fn positions_run_from_zero_to_size_minus_one() {
+    let sp = small(2);
+    let mut next = 0;
+    let mut issued = Vec::new();
+    while let Ok(name) = sp.name_at_position(7, next) {
+        issued.push(name);
+        next += 1;
+    }
+    assert_eq!(next, sp.size(), "exhausted exactly at next == size");
+    assert_eq!(issued[0], sp.name_at_position(7, 0).unwrap());
+    assert_eq!(sp.position_of(7, &issued[0]).unwrap(), 0);
+    assert_eq!(
+        sp.position_of(7, issued.last().unwrap()).unwrap(),
+        sp.size() - 1
+    );
+}
+
 #[test]
 fn name_at_position_refuses_an_exhausted_sequence() {
     let sp = small(2);
@@ -386,7 +415,7 @@ fn generate_name_with_seed_is_position_zero_of_the_default_space() {
 }
 
 #[test]
-fn generate_name_with_options_and_seed_clamps_like_the_unseeded_form() {
+fn generate_name_with_options_and_seed_is_position_zero_and_strict() {
     assert_eq!(
         generate_name_with_options_and_seed(&opts(2, None, "-"), 42).unwrap(),
         "rigid-chapter"
@@ -395,14 +424,56 @@ fn generate_name_with_options_and_seed_clamps_like_the_unseeded_form() {
         generate_name_with_options_and_seed(&opts(2, None, "_"), 42).unwrap(),
         "rigid_chapter"
     );
-    // Clamped up to 2, as generate_name_with_options clamps.
     assert_eq!(
-        generate_name_with_options_and_seed(&opts(1, None, "-"), 42).unwrap(),
-        "rigid-chapter"
+        generate_name_with_options_and_seed(&opts(2, None, "-"), 42).unwrap(),
+        space(2).name_at_position(42, 0).unwrap()
     );
-    // Clamped down to 16, whose space does not fit in u64.
+    // Strict, as generate_name_with_options is: refused, never clamped.
+    for c in [1, 5, 20] {
+        assert_eq!(
+            generate_name_with_options_and_seed(&opts(c, None, "-"), 42).unwrap_err(),
+            IndexError::InvalidComponents(c)
+        );
+    }
     assert_eq!(
-        generate_name_with_options_and_seed(&opts(20, None, "-"), 42).unwrap_err(),
-        IndexError::SpaceTooLarge { components: 16 }
+        generate_name_with_options_and_seed(&opts(2, Some(2), "-"), 42).unwrap_err(),
+        IndexError::EmptyWordList(2)
     );
+    assert_eq!(
+        generate_name_with_options_and_seed(&opts(2, None, ""), 42).unwrap_err(),
+        IndexError::InvalidSeparator(String::new())
+    );
+}
+
+// ------------------------------------------ strict generate_name_with_options
+
+#[test]
+fn generate_name_with_options_refuses_what_the_space_refuses() {
+    for c in [0, 1, 5, 16, 20] {
+        assert_eq!(
+            generate_name_with_options(&opts(c, None, "-")).unwrap_err(),
+            IndexError::InvalidComponents(c)
+        );
+    }
+    assert_eq!(
+        generate_name_with_options(&opts(3, Some(2), "-")).unwrap_err(),
+        IndexError::EmptyWordList(2)
+    );
+    for sep in ["", "x", "-a-"] {
+        assert_eq!(
+            generate_name_with_options(&opts(2, None, sep)).unwrap_err(),
+            IndexError::InvalidSeparator(sep.to_string())
+        );
+    }
+}
+
+#[test]
+fn generate_name_with_options_draws_from_the_space_it_validated() {
+    for c in [2, 3, 4] {
+        let sp = NameSpace::new(&opts(c, Some(5), " ")).unwrap();
+        let name = generate_name_with_options(&opts(c, Some(5), " ")).unwrap();
+        // A space separator is valid (full-sail's ship names use it).
+        assert_eq!(name.split(' ').count(), usize::from(c), "{name}");
+        assert!(sp.index_of(&name).is_ok(), "{name} is outside its space");
+    }
 }

@@ -43,7 +43,15 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_generate_name_with_options() {
-        let name = generate_name_with_options(2, Some(5), "_");
+        let name = with_options(2, Some(5), "_").unwrap();
         assert!(name.contains('_'));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_generate_name_with_options_refuses_five_components() {
+        assert_eq!(
+            with_options(5, None, "-").unwrap_err(),
+            harp_core::IndexError::InvalidComponents(5)
+        );
     }
 }
