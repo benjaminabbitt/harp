@@ -54,11 +54,15 @@ fn seed_from(seed: &Bound<'_, PyAny>) -> PyResult<u64> {
 /// the seed's scheme-v1 permutation, so it equals the first name a store
 /// with this seed issues.
 ///
+/// Args:
+///     seed: An int in 0..2**64, keyword-only: generate_name_with_seed(seed=42).
+///
 /// Raises:
-///     TypeError: the seed is not an int (a bool is refused).
+///     TypeError: the seed is not an int (a bool is refused), or is passed
+///         positionally.
 ///     ValueError: the seed is outside 0..2**64.
 #[pyfunction]
-#[pyo3(signature = (seed))]
+#[pyo3(signature = (*, seed))]
 fn generate_name_with_seed(seed: &Bound<'_, PyAny>) -> PyResult<String> {
     Ok(harp_core::generate_name_with_seed(seed_from(seed)?))
 }
@@ -66,17 +70,21 @@ fn generate_name_with_seed(seed: &Bound<'_, PyAny>) -> PyResult<String> {
 /// A deterministic name for `seed` with options: position 0 of the seed's
 /// scheme-v1 permutation of that space.
 ///
+/// Every argument is keyword-only:
+/// generate_name_with_options_and_seed(seed=42, components=2).
+///
 /// Args:
 ///     seed: An int in 0..2**64.
 ///     components, max_element_length, separator: As for
 ///         generate_name_with_options.
 ///
 /// Raises:
-///     TypeError: the seed is not an int (a bool is refused).
+///     TypeError: the seed is not an int (a bool is refused), or an argument
+///         is passed positionally.
 ///     ValueError: the seed is outside 0..2**64, or the options are refused
 ///         as generate_name_with_options refuses them.
 #[pyfunction]
-#[pyo3(signature = (seed, components=3, max_element_length=None, separator="-"))]
+#[pyo3(signature = (*, seed, components=3, max_element_length=None, separator="-"))]
 fn generate_name_with_options_and_seed(
     seed: &Bound<'_, PyAny>,
     components: u8,
