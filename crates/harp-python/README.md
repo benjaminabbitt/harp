@@ -32,7 +32,8 @@ harp.generate_name_with_options_and_seed(seed=42, components=2)   # "rigid-chapt
 
 A seeded name is position 0 of the seed's permutation of the name space
 (scheme `harp.SCHEME_VERSION`); the same seed and options give the same name
-in every harp binding.
+here as in harp-core (Rust). Only harp-core and this Python binding have seeded
+naming; the Go, FFI and TypeScript/WASM bindings do not expose it.
 
 ## API
 
