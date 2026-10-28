@@ -118,10 +118,14 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      # One abi3 wheel (cp39-abi3) serves every CPython >= 3.9; test that same
+      # wheel on the interpreters it must serve. The last listed is the default.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: |
+            3.14
+            3.13
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -140,10 +144,14 @@ jobs:
       - name: Build Python wheel
         run: cd crates/harp-python && maturin build --release
 
-      - name: Install and test wheel
+      - name: Install and test the abi3 wheel on 3.13 and 3.14
         run: |
-          pip install target/wheels/*.whl
-          python -c "import harp; print(harp.generate_name()); print(harp.version())"
+          ls target/wheels/harp_names-*-cp39-abi3-*.whl
+          for py in python3.13 python3.14; do
+            "$py" -m venv "venv-$py"
+            "venv-$py/bin/pip" install pytest target/wheels/harp_names-*-cp39-abi3-*.whl
+            "venv-$py/bin/python" -m pytest crates/harp-python/tests -q
+          done
 
   build:
     name: Build Release

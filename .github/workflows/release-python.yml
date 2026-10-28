@@ -18,6 +18,9 @@ env:
   PACKAGE_NAME: harp-names
   PYTHON_VERSION: '3.12'
 
+# harp-python builds with PyO3's abi3-py39 feature (crates/harp-python/Cargo.toml),
+# so each target job below yields ONE cp39-abi3 wheel serving every CPython >= 3.9;
+# PYTHON_VERSION is only the build interpreter, not the wheel's target.
 jobs:
   linux:
     runs-on: ubuntu-latest

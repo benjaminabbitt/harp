@@ -9,4 +9,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 harp-core.workspace = true
-pyo3 = { version = "0.23", features = ["extension-module"] }
+pyo3 = { version = "0.23", features = ["extension-module", "abi3-py39"] }

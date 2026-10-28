@@ -53,11 +53,15 @@ install-python-uv: build-python
     [ -d .venv ] || uv venv --python 3.13
     uv pip install target/wheels/harp_names-*.whl --force-reinstall
 
-# Test Python bindings: build a wheel, install it in a throwaway env, run pytest
+# Test Python bindings: build the one abi3 wheel, then install it in a throwaway
+# env and run pytest on each CPython it must serve (the same wheel, unrebuilt)
 test-python:
     rm -rf target/python-test-wheel
-    cd crates/harp-python && maturin build --release --interpreter python3.13 --out ../../target/python-test-wheel
-    uv run --isolated --no-project --python 3.13 --reinstall-package harp-names --with pytest --with target/python-test-wheel/harp_names-*.whl pytest crates/harp-python/tests -q
+    cd crates/harp-python && maturin build --release --out ../../target/python-test-wheel
+    ls target/python-test-wheel/harp_names-*-cp39-abi3-*.whl
+    for py in 3.13 3.14; do \
+        uv run --isolated --no-project --python $py --reinstall-package harp-names --with pytest --with target/python-test-wheel/harp_names-*.whl pytest crates/harp-python/tests -q || exit 1; \
+    done
 
 # === Go ===
 
