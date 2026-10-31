@@ -7,14 +7,14 @@ name = "harp-names"
 version = "0.1.2"
 description = "Generate random names from adjectives and nouns"
 readme = "README.md"
-license = { text = "AGPL-3.0-only" }
+license = { text = "BSD-3-Clause" }
 requires-python = ">=3.9"
 authors = [{ name = "babbitt" }]
 keywords = ["random", "name", "generator"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: BSD License",
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",

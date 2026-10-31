@@ -21,7 +21,7 @@
     "generator"
   ],
   "author": "babbitt",
-  "license": "AGPL-3.0-only",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/benjaminabbitt/harp.git",

@@ -48,4 +48,4 @@ naming; the Go, FFI and TypeScript/WASM bindings do not expose it.
 
 ## License
 
-AGPL-3.0-only
+BSD-3-Clause
