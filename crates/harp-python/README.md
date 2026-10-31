@@ -48,4 +48,4 @@ naming; the Go, FFI and TypeScript/WASM bindings do not expose it.
 
 ## License
 
-BSD-3-Clause
+Licensed under either of Apache License 2.0 or BSD 3-Clause, at your option.

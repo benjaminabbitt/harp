@@ -59,4 +59,4 @@ func main() {
 
 ## License
 
-BSD-3-Clause
+Licensed under either of Apache License 2.0 or BSD 3-Clause, at your option.
