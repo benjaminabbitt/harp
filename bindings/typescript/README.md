@@ -25,4 +25,4 @@ console.log(name); // e.g., "misty-golden-river"
 
 ## License
 
-MIT
+AGPL-3.0-only

@@ -265,7 +265,7 @@ bindings/
 
 ## License
 
-BSD-3-Clause
+AGPL-3.0-only
 
 ---
 
