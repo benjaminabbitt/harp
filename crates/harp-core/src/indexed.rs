@@ -419,6 +419,48 @@ pub fn name_for(
     size: HashSize,
     taken: impl FnMut(&str) -> bool,
 ) -> Result<String, IndexError> {
-    let _ = (input, opts, size, taken);
-    todo!("hash-seeded names: name_for")
+    let mut taken = taken;
+    let space = NameSpace::new(opts)?;
+    let (hex, seed) = match size {
+        HashSize::Bits64 => {
+            let h = fnv1a_64(input);
+            (format!("{h:016x}"), h)
+        }
+        HashSize::Bits128 => {
+            let h = fnv1a_128(input);
+            (format!("{h:032x}"), h as u64)
+        }
+    };
+    let base = space.name_at_position(seed, 0)?;
+    if !taken(&base) {
+        return Ok(base);
+    }
+    for digits in (6..=hex.len()).step_by(2) {
+        let candidate = format!("{base}-{}", &hex[..digits]);
+        if !taken(&candidate) {
+            return Ok(candidate);
+        }
+    }
+    Err(IndexError::HashExhausted { name: base })
+}
+
+// FNV-1a, private to this crate: the same functions as rust-support's
+// `fnv-hash` crate (`fnv1a_64`, `fnv1a_128`), which owns the parameters and
+// their published vectors. This copy must stay bit-identical to it and is
+// replaced by a dependency on that crate once it is published and pinned.
+const FNV_OFFSET_64: u64 = 0xcbf2_9ce4_8422_2325;
+const FNV_PRIME_64: u64 = 0x0000_0100_0000_01b3;
+const FNV_OFFSET_128: u128 = 0x6c62_272e_07bb_0142_62b8_2175_6295_c58d;
+const FNV_PRIME_128: u128 = 0x0000_0000_0100_0000_0000_0000_0000_013B;
+
+fn fnv1a_64(bytes: &[u8]) -> u64 {
+    bytes.iter().fold(FNV_OFFSET_64, |h, b| {
+        (h ^ u64::from(*b)).wrapping_mul(FNV_PRIME_64)
+    })
+}
+
+fn fnv1a_128(bytes: &[u8]) -> u128 {
+    bytes.iter().fold(FNV_OFFSET_128, |h, b| {
+        (h ^ u128::from(*b)).wrapping_mul(FNV_PRIME_128)
+    })
 }

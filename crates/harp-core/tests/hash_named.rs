@@ -233,7 +233,7 @@ fn test_suffix_grows_six_then_eight_hex_digits() {
 #[test]
 fn test_the_ladder_ends_at_16_hex_for_64_bits_and_32_for_128() {
     let o = default_opts();
-    let (n64, asked64) = run(b"req-1", &o, HashSize::Bits64, 5);
+    let (n64, asked64) = run(b"req-1", &o, HashSize::Bits64, 6);
     let c64 = candidates(b"req-1", HashSize::Bits64, &o);
     assert_eq!(c64.len(), 7, "the base and 6, 8, 10, 12, 14, 16 digits");
     assert_eq!(asked64, c64);
