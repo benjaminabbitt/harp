@@ -98,6 +98,7 @@
 //! new [`SCHEME_VERSION`].
 
 use crate::{NameOptions, ADJECTIVES, NOUNS};
+use fnv_hash::{fnv1a_128, fnv1a_64};
 use rand::Rng;
 
 /// Version of the (word lists, index mapping, permutation) scheme. A store
@@ -442,25 +443,4 @@ pub fn name_for(
         }
     }
     Err(IndexError::HashExhausted { name: base })
-}
-
-// FNV-1a, private to this crate: the same functions as rust-support's
-// `fnv-hash` crate (`fnv1a_64`, `fnv1a_128`), which owns the parameters and
-// their published vectors. This copy must stay bit-identical to it and is
-// replaced by a dependency on that crate once it is published and pinned.
-const FNV_OFFSET_64: u64 = 0xcbf2_9ce4_8422_2325;
-const FNV_PRIME_64: u64 = 0x0000_0100_0000_01b3;
-const FNV_OFFSET_128: u128 = 0x6c62_272e_07bb_0142_62b8_2175_6295_c58d;
-const FNV_PRIME_128: u128 = 0x0000_0000_0100_0000_0000_0000_0000_013B;
-
-fn fnv1a_64(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(FNV_OFFSET_64, |h, b| {
-        (h ^ u64::from(*b)).wrapping_mul(FNV_PRIME_64)
-    })
-}
-
-fn fnv1a_128(bytes: &[u8]) -> u128 {
-    bytes.iter().fold(FNV_OFFSET_128, |h, b| {
-        (h ^ u128::from(*b)).wrapping_mul(FNV_PRIME_128)
-    })
 }

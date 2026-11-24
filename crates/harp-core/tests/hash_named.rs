@@ -1,10 +1,9 @@
 //! Tests for hash-seeded names with a claim callback ([`harp_core::name_for`]).
 //!
-//! The hash is FNV-1a, which will come from rust-support's `fnv-hash` crate
-//! once it is published and pinned (harp-core does not depend on it yet, so
-//! it stays buildable). Until then each test carries its own model of the
-//! loop (`Hash::of`), pinned to the published vectors below, so the tests
-//! state the scheme without calling the code under test for the hash. The
+//! The hash is FNV-1a, from rust-support's `fnv-hash` crate. Each test
+//! carries its own model of the loop (`Hash::of`), pinned to the published
+//! vectors below, so the tests state the scheme without calling the code
+//! under test for the hash. The
 //! parameters and vectors are a compatibility promise: every name derived
 //! from an input depends on them.
 

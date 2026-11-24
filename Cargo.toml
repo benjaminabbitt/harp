@@ -27,3 +27,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rand = "0.9"
 flate2 = "1"
+# rust-support's FNV-1a (pure, no dependency of its own), pinned by full commit.
+fnv-hash = { git = "https://github.com/benjaminabbitt/rust-support", rev = "45d601e04f2c88641b2f566828fbb29dc1319992" }
