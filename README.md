@@ -194,6 +194,42 @@ max_element_length=None, separator="-")`, keyword-only, with
 `harp.SCHEME_VERSION`; a seed that is not an `int` in `0..2**64` is refused. The other bindings do not
 expose seeded naming yet.
 
+### Hash-seeded names with a claim callback (Rust)
+
+`harp_core::name_for(input, &opts, taken)` derives a name from a stable input
+(its bytes, not a digest) so the same input gets the same name every time:
+
+```rust,ignore
+use harp_core::{name_for, NameOptions};
+
+// `taken` is the caller's claim attempt: it answers true when the candidate
+// is refused. harp calls it in order, once per candidate, until it says false.
+let name = name_for(b"request-id", &NameOptions::default(), |candidate| {
+    !try_to_claim(candidate)
+})?;   // "brisk-copper-moth", else "brisk-copper-moth-3fa9c1", then 8, 10, .. 32 hex digits
+```
+
+How it works: `h = fnv1a_128(input)`; the seed is the LOW 64 bits of `h`; the
+base name is position 0 of that seed's permutation (scheme v1) with your
+`NameOptions`. When `taken` refuses a candidate, `-` plus the first 6, then 8,
+10, .., 32 lowercase hex digits of `h` (most significant first) are appended;
+all 32 refused is `IndexError::HashExhausted`. The suffix separator is always
+`-`, whatever `NameOptions::separator` is.
+
+**FNV-1a** (Fowler-Noll-Vo, variant 1a) starts from an offset basis and, for
+each byte, XORs the byte in and then multiplies by the FNV prime, wrapping.
+The 128-bit parameters are offset basis `0x6c62272e07bb014262b821756295c58d`
+and prime `0x0000000001000000000000000000013B` (2^88 + 0x13B), from the IETF
+draft-eastlake-fnv and <http://www.isthe.com/chongo/tech/comp/fnv/>. Vectors:
+`""` is `6c62272e07bb014262b821756295c58d`, `"a"` is
+`d228cb696f1a8caf78912b704e4a8964`, `"foobar"` is
+`343e1662793c64bf6f0d3597ba446f18`. It needs no dependency and is identical in
+every binding. It is not cryptographic (fine for names, not for adversarial
+inputs; a collision is caught by `taken`), and it is a compatibility promise:
+changing it renames every name derived from an input. taskloom's own 64-bit
+FNV-1a for task ids is separate and unchanged. Only Rust exposes `name_for`
+so far.
+
 ## Architecture
 
 Single Rust implementation, multiple bindings:

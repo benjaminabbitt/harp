@@ -8,8 +8,8 @@ pub mod words;
 
 pub use error::{Error, Result};
 pub use indexed::{
-    generate_name_with_options_and_seed, generate_name_with_seed, IndexError, NameSpace,
-    Permutation, MAX_COMPONENTS, MIN_COMPONENTS, SCHEME_VERSION,
+    fnv1a_128, generate_name_with_options_and_seed, generate_name_with_seed, name_for, IndexError,
+    NameSpace, Permutation, MAX_COMPONENTS, MIN_COMPONENTS, SCHEME_VERSION,
 };
 pub use words::{ADJECTIVES, NOUNS};
 
