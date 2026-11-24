@@ -12,6 +12,10 @@ build:
 test:
     cargo test
 
+# Run every test binary even when an earlier one fails
+test-all:
+    cargo test --workspace --no-fail-fast
+
 # Build and test everything
 all: build test build-python build-wasm
     @echo "All builds complete"

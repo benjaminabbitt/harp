@@ -53,71 +53,49 @@
 //!
 //! A caller with a stable input (a request id, say) wants the SAME name every
 //! time that input is presented, with a collision settled by a claim rather
-//! than by luck. [`name_for`] derives the seed from the input itself:
+//! than by luck. [`name_for`] derives the seed from the input itself, and the
+//! caller REQUESTS the hash size ([`HashSize`]: 64 or 128 bits):
 //!
-//! 1. `h = fnv1a_128(input)`, a `u128` (below).
-//! 2. `seed = h as u64`: the LOW 64 bits (`h & 0xFFFF_FFFF_FFFF_FFFF`).
+//! 1. `h = FNV-1a(input)` at the requested width: a `u64` for
+//!    [`HashSize::Bits64`], a `u128` for [`HashSize::Bits128`].
+//! 2. `seed = h as u64`: all of a 64-bit hash, the LOW 64 bits of a 128-bit
+//!    one.
 //! 3. The base name is `NameSpace::name_at_position(seed, 0)` for the
 //!    caller's [`NameOptions`](crate::NameOptions) (scheme v1, above).
 //! 4. `taken(base)` decides. A `true` answer appends `-` and the first 6
-//!    lowercase hex digits of `h`, then 8, 10, .., 32 digits, each tried in
-//!    turn. `h` is written as 32 lowercase hex digits, MOST significant
-//!    first, so the suffix is the TOP of the hash while the seed is the
-//!    BOTTOM: two inputs whose seeds collide (same base name) still differ in
-//!    the suffix unless all 128 bits agree. Were the seed the high half, a
-//!    seed collision would share its first 16 suffix digits and the ladder
-//!    would be no use. The suffix separator is always `-`, whatever
+//!    lowercase hex digits of `h`, then 8, 10, .. digits, each tried in turn,
+//!    up to the whole hash: 16 digits for 64 bits, 32 for 128. `h` is written
+//!    as `width/4` lowercase hex digits, MOST significant first (the zero
+//!    padded `{:016x}` or `{:032x}`). For 128 bits the suffix is the TOP of
+//!    the hash while the seed is the BOTTOM, so two inputs whose seeds
+//!    collide (same base name) still differ in the suffix unless all 128 bits
+//!    agree; were the seed the high half, a seed collision would share its
+//!    first 16 suffix digits and the ladder would be no use. With 64 bits the
+//!    seed IS the hash, so a seed collision is a whole-hash collision and the
+//!    ladder cannot separate two such inputs: ask for 128 bits where that
+//!    matters. The suffix separator is always `-`, whatever
 //!    `NameOptions::separator` joins the base with.
-//! 5. `taken` answered `true` even for the full 32 digits:
+//! 5. `taken` answered `true` even for the whole hash:
 //!    [`IndexError::HashExhausted`]. Never a silent random name.
 //!
 //! `taken` is `FnMut`, called in order, once per candidate, and stops at the
 //! first `false`. In a caller it is the claim attempt itself (effectful), so
-//! there is no check-then-claim race; harp never calls it again for a
-//! candidate it has already had answered `false`, but may call it several
-//! times per input.
+//! there is no check-then-claim race.
 //!
-//! **FNV-1a.** Fowler-Noll-Vo variant 1a: start from an offset basis; for
-//! each input byte, XOR the byte into the hash, THEN multiply by the FNV
-//! prime (variant 1, FNV-1, multiplies first; the two differ). Arithmetic
-//! wraps modulo the hash width. The 128-bit parameters:
-//!
-//! - offset basis `0x6c62272e07bb014262b821756295c58d`
-//! - prime `0x0000000001000000000000000000013B` (2^88 + 0x13B)
-//!
-//! ```text
-//! h = OFFSET_BASIS
-//! for byte in input { h = (h ^ byte).wrapping_mul(PRIME) }   // u128
-//! ```
-//!
-//! Source: G. Fowler, L. C. Noll, K. Vo, P. Eastlake, T. Hansen, "The FNV
-//! Non-Cryptographic Hash Algorithm", IETF draft-eastlake-fnv (the 128-bit
-//! offset basis, its section on parameters; the prime's hex form
-//! `0x00000000 01000000 00000000 0000013B` is the draft's reference code
-//! `FNV128prime`), and <http://www.isthe.com/chongo/tech/comp/fnv/>. Test
-//! vectors (hex, `h` of the input bytes with no terminator):
-//!
-//! | input    | `fnv1a_128`                          | seed (low 64)        |
-//! |----------|--------------------------------------|----------------------|
-//! | `""`     | `6c62272e07bb014262b821756295c58d`   | `62b821756295c58d`   |
-//! | `"a"`    | `d228cb696f1a8caf78912b704e4a8964`   | `78912b704e4a8964`   |
-//! | `"foobar"` | `343e1662793c64bf6f0d3597ba446f18` | `6f0d3597ba446f18`   |
-//!
-//! The empty input hashes to the offset basis by definition. The draft
-//! publishes 32- and 64-bit vectors only (e.g. 64-bit `"foobar"` is
-//! `0x85944171f73967e8`); the 128-bit rows above were computed by an
-//! independent model of the same loop, which reproduces the draft's 64-bit
-//! rows when given the 64-bit parameters.
-//!
-//! **Why this hash.** It needs no dependency and is a dozen lines, so every
-//! binding can reproduce it exactly. It is NOT cryptographic: fine for
-//! spreading names, not for adversarial inputs, and an accidental or forced
-//! collision is caught by `taken` anyway. **It is a compatibility promise**:
-//! changing the hash, its parameters, which bits seed, or the suffix form
-//! renames every name ever derived from an input, so it is part of scheme v1
-//! and moves only with a new [`SCHEME_VERSION`]. taskloom's separate 64-bit
-//! FNV-1a of a task's request id (idempotent task ids) is a different
-//! function with its own promise; this does not change it.
+//! **The hash is FNV-1a**, from rust-support's `fnv-hash` crate (`fnv1a_64`,
+//! `fnv1a_128`), which documents its parameters, published vectors and how
+//! the 128-bit vectors were derived. In short: Fowler-Noll-Vo variant 1a, XOR
+//! each byte in, then multiply by the prime, wrapping; 64-bit offset basis
+//! `0xcbf29ce484222325` and prime `0x100000001b3`, 128-bit offset basis
+//! `0x6c62272e07bb014262b821756295c58d` and prime
+//! `0x0000000001000000000000000000013B` (IETF draft-eastlake-fnv;
+//! <http://www.isthe.com/chongo/tech/comp/fnv/>). It needs no dependency of
+//! its own and is the same in every binding. It is NOT cryptographic: fine
+//! for names, not for adversarial inputs, and a collision is caught by
+//! `taken` anyway. **It is a compatibility promise**: changing the hash, its
+//! parameters, which bits seed, or the suffix form renames every name ever
+//! derived from an input, so it is part of scheme v1 and moves only with a
+//! new [`SCHEME_VERSION`].
 
 use crate::{NameOptions, ADJECTIVES, NOUNS};
 use rand::Rng;
@@ -173,9 +151,9 @@ pub enum IndexError {
     UnknownWord { slot: usize, word: String },
 
     /// [`name_for`] was answered "taken" for the base name and for every
-    /// suffix up to the whole 32-digit hash. `name` is the base name. The
+    /// suffix up to the whole hash. `name` is the base name. The
     /// caller must not paper over it with a random name.
-    #[error("every candidate for {name:?}, up to its full 128-bit hash suffix, is taken")]
+    #[error("every candidate for {name:?}, up to its whole-hash suffix, is taken")]
     HashExhausted { name: String },
 }
 
@@ -418,24 +396,29 @@ pub fn generate_name_with_options_and_seed(
     NameSpace::new(opts)?.name_at_position(seed, 0)
 }
 
-/// FNV-1a over `bytes`, 128 bits: see the module docs for the exact
-/// parameters, test vectors and the compatibility promise.
-pub fn fnv1a_128(bytes: &[u8]) -> u128 {
-    let _ = bytes;
-    todo!("hash-seeded names: FNV-1a 128")
+/// The width of the hash that seeds [`name_for`], requested by the caller.
+/// It sets where the seed comes from and how long the suffix ladder is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HashSize {
+    /// FNV-1a 64: the seed is the hash; the ladder ends at 16 hex digits.
+    Bits64,
+    /// FNV-1a 128: the seed is the low 64 bits; the ladder ends at 32 hex
+    /// digits.
+    Bits128,
 }
 
-/// The name for `input` under `opts`: position 0 of the permutation seeded by
-/// the low 64 bits of `fnv1a_128(input)`, then `-` plus 6, 8, .., 32 hex
+/// The name for `input` under `opts`: position 0 of the permutation seeded
+/// from the FNV-1a hash of `input` at `size`, then `-` plus 6, 8, .. hex
 /// digits of the hash while `taken` answers `true`. `taken` is called in
-/// order, once per candidate, and its first `false` ends the search; all 32
-/// digits taken is [`IndexError::HashExhausted`]. Invalid options are refused
+/// order, once per candidate, and its first `false` ends the search; the whole
+/// hash taken is [`IndexError::HashExhausted`]. Invalid options are refused
 /// before `taken` is called. See the module docs.
 pub fn name_for(
     input: &[u8],
     opts: &NameOptions,
+    size: HashSize,
     taken: impl FnMut(&str) -> bool,
 ) -> Result<String, IndexError> {
-    let _ = (input, opts, taken);
+    let _ = (input, opts, size, taken);
     todo!("hash-seeded names: name_for")
 }

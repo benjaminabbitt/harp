@@ -196,39 +196,41 @@ expose seeded naming yet.
 
 ### Hash-seeded names with a claim callback (Rust)
 
-`harp_core::name_for(input, &opts, taken)` derives a name from a stable input
-(its bytes, not a digest) so the same input gets the same name every time:
+`harp_core::name_for(input, &opts, size, taken)` derives a name from a stable
+input (its bytes, not a digest) so the same input gets the same name every
+time. The caller requests the hash size, `HashSize::Bits64` or `Bits128`:
 
 ```rust,ignore
-use harp_core::{name_for, NameOptions};
+use harp_core::{name_for, HashSize, NameOptions};
 
 // `taken` is the caller's claim attempt: it answers true when the candidate
 // is refused. harp calls it in order, once per candidate, until it says false.
-let name = name_for(b"request-id", &NameOptions::default(), |candidate| {
+let name = name_for(b"request-id", &NameOptions::default(), HashSize::Bits128, |candidate| {
     !try_to_claim(candidate)
-})?;   // "brisk-copper-moth", else "brisk-copper-moth-3fa9c1", then 8, 10, .. 32 hex digits
+})?;   // "brisk-copper-moth", else "brisk-copper-moth-3fa9c1", then 8, 10, .. digits
 ```
 
-How it works: `h = fnv1a_128(input)`; the seed is the LOW 64 bits of `h`; the
-base name is position 0 of that seed's permutation (scheme v1) with your
-`NameOptions`. When `taken` refuses a candidate, `-` plus the first 6, then 8,
-10, .., 32 lowercase hex digits of `h` (most significant first) are appended;
-all 32 refused is `IndexError::HashExhausted`. The suffix separator is always
-`-`, whatever `NameOptions::separator` is.
+How it works: `h` is the FNV-1a hash of the input at the requested width; the
+seed is `h` as a `u64` (all of a 64-bit hash, the LOW 64 bits of a 128-bit
+one); the base name is position 0 of that seed's permutation (scheme v1) with
+your `NameOptions`. When `taken` refuses a candidate, `-` plus the first 6,
+then 8, 10, .. lowercase hex digits of `h` (most significant first) are
+appended, up to 16 digits for 64 bits and 32 for 128; the whole hash refused is
+`IndexError::HashExhausted`. The suffix separator is always `-`, whatever
+`NameOptions::separator` is. Ask for 128 bits where two inputs sharing a base
+name must still be told apart: a 64-bit seed collision is a whole-hash
+collision.
 
-**FNV-1a** (Fowler-Noll-Vo, variant 1a) starts from an offset basis and, for
-each byte, XORs the byte in and then multiplies by the FNV prime, wrapping.
-The 128-bit parameters are offset basis `0x6c62272e07bb014262b821756295c58d`
-and prime `0x0000000001000000000000000000013B` (2^88 + 0x13B), from the IETF
-draft-eastlake-fnv and <http://www.isthe.com/chongo/tech/comp/fnv/>. Vectors:
-`""` is `6c62272e07bb014262b821756295c58d`, `"a"` is
-`d228cb696f1a8caf78912b704e4a8964`, `"foobar"` is
-`343e1662793c64bf6f0d3597ba446f18`. It needs no dependency and is identical in
-every binding. It is not cryptographic (fine for names, not for adversarial
-inputs; a collision is caught by `taken`), and it is a compatibility promise:
-changing it renames every name derived from an input. taskloom's own 64-bit
-FNV-1a for task ids is separate and unchanged. Only Rust exposes `name_for`
-so far.
+**FNV-1a** (Fowler-Noll-Vo, variant 1a) XORs each byte into the hash and then
+multiplies by the FNV prime, wrapping. harp-core takes it from rust-support's
+`fnv-hash` crate, which documents the parameters (64-bit basis
+`0xcbf29ce484222325`, prime `0x100000001b3`; 128-bit basis
+`0x6c62272e07bb014262b821756295c58d`, prime
+`0x0000000001000000000000000000013B`), the published vectors and their source
+(IETF draft-eastlake-fnv). It is not cryptographic (fine for names, not for
+adversarial inputs; a collision is caught by `taken`), and it is a
+compatibility promise: changing it renames every name derived from an input.
+Only Rust exposes `name_for` so far.
 
 ## Architecture
 
