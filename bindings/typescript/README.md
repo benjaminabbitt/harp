@@ -25,4 +25,4 @@ console.log(name); // e.g., "misty-golden-river"
 
 ## License
 
-MIT
+Licensed under either of Apache License 2.0 or BSD 3-Clause, at your option.

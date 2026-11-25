@@ -12,7 +12,7 @@ members = [
 [workspace.package]
 version = "0.1.2"
 edition = "2021"
-license = "BSD-3-Clause"
+license = "Apache-2.0 OR BSD-3-Clause"
 repository = "https://github.com/benjaminabbitt/harp"
 authors = ["babbitt"]
 description = "Generate random names from adjectives and nouns"
